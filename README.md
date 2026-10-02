@@ -1,96 +1,130 @@
 # office-docs-skill
 
-**本机的文档读写/转换技能**（DSH Agent Skill + 可直接当 CLI 用）。这台机器没有 WPS、也没有微软 Office，
-本项目用 LibreOffice headless ＋ Python 库把 Word / Excel / PPT / PDF 的读、写、改、转、生成、渲染包起来。
+**Word / Excel / PowerPoint / PDF 的读、写、改、转、生成 —— 既能当 Agent Skill，也能直接当 CLI 用。**
+它把 LibreOffice headless 与 Python 库包在一起，因此在**没装 Microsoft Office（也没装 WPS）的机器上**照样能干活。
 
-**原创实现**：不依赖、不包含、不派生任何第三方技能包的材料（详见下方"来源与许可"）。
+[English](README.en.md) ｜ MIT
 
-## 怎么跑
+---
+
+## 依赖
+
+| 类别 | 需要什么 |
+| --- | --- |
+| 系统命令 | `soffice`（LibreOffice）、`pdftoppm` / `pdftotext`（poppler-utils）、`tesseract`（中文 OCR 需 `chi_sim`） |
+| Python 包 | `python-docx`、`openpyxl`、`python-pptx`、`xlrd`、`odfpy`、`pymupdf`、`pypdf`、`pdf2docx`、`cryptography`（仅 PDF AES 加解密） |
+| 可选 | `pandoc`（Markdown ↔ docx 等） |
+| 中文排版（可选） | CJK 字库 ＋ fontconfig 别名；`scripts/install_fonts.sh` 负责安装与体检 |
+
+先跑 `python3 scripts/office_cli.py doctor` —— 它会把上面每一项列成 `ok` 或缺什么。
+除此之外没有别的前提：不需要安装步骤、没有常驻服务、没有配置文件。
+
+## 快速开始
 
 ```bash
-python3 scripts/office_cli.py doctor          # 环境自检，{"ok": true} 才算齐
-python3 scripts/selftest.py                   # 端到端自检（31 项，真跑真断言；退出码 0 = 全过）
-bash    scripts/install_fonts.sh --check      # 中文字体别名体检（只读，不改系统）
-python3 scripts/office_cli.py info  a.xlsx
-python3 scripts/office_cli.py text  a.pdf
+python3 scripts/office_cli.py doctor          # 环境自检；{"ok": true} 才算齐
+python3 scripts/selftest.py                   # 端到端自检；打印 N/N，全过才退出 0
+bash    scripts/install_fonts.sh --check      # 中文字体/别名体检（只读）
+
+python3 scripts/office_cli.py info  a.xlsx    # 按内容判真实类型与结构，不信扩展名
+python3 scripts/office_cli.py text  a.pdf     # 抽文本
 python3 scripts/office_cli.py convert a.docx --to pdf
 python3 scripts/office_cli.py pptx-new --spec s.json -o out.pptx
 python3 scripts/office_cli.py thumb out.pptx -o thumbs/
 python3 scripts/office_cli.py pdf-ocr scan.pdf -l chi_sim+eng
 ```
 
-**交付前四道闸门**（原理、踩坑与 spec 格式见 [references/quality-gates.md](references/quality-gates.md)）：
+**判据**：命令成功 = **退出码 0 且 stdout 是 `{"ok": true, ...}`**。出错时同一个信封里带错误信息，
+退出码非 0。
+
+## 交付前的四道闸门
+
+"转换成功"不等于"文件是对的"。这四道检查专门挡那些**打开文件时看不出来**的坏法：
 
 ```bash
-python3 scripts/office_cli.py ooxml-check out.docx    # ① 包结构：内容类型/关系表/r:id 断链/XML 良构
-python3 scripts/office_cli.py form-verify spec.json   # ② 几何：渲染后量表格线位，超差即 ok:false
-python3 scripts/office_cli.py xlsx-recalc out.xlsx    # ③ 公式：LO 算出值写回 + 扫 #REF!/#NAME?
-python3 scripts/office_cli.py pdf-boxcheck spec.json  # ④ 框位：装不下/重叠/出页
+python3 scripts/office_cli.py ooxml-check out.docx    # ① 包结构：内容类型 / 关系表 / r:id / XML 良构
+python3 scripts/office_cli.py form-verify spec.json   # ② 几何：渲染后量表格线位，和 spec.tol_cm 比
+python3 scripts/office_cli.py xlsx-recalc out.xlsx    # ③ 公式：用 LibreOffice 重算并扫 #REF!/#NAME?
+python3 scripts/office_cli.py pdf-boxcheck spec.json  # ④ 框位：填 PDF 之前查装不下/重叠/出页
 python3 scripts/office_cli.py pdf-fill a.pdf spec.json -o out.pdf --preview p.png
 ```
 
-约定：**成功 = 退出码 0 且 stdout 是 `{"ok": true, ...}`**（本工作区口径）。所有子命令见
-[`SKILL.md`](SKILL.md) 与 [`references/formats.md`](references/formats.md)。
+原理、踩坑与 spec 格式见 [`references/quality-gates.md`](references/quality-gates.md)。
 
-## 作为技能使用
+## 能做什么
 
-`SKILL.md` 是技能正文（YAML front matter 的 `name` / `description` 决定何时被触发）。
-本机已把本项目软链到 `~/.dsh/skills/office-docs-skill`，在「会话技能」里勾选即可加载。
-
-`examples/gongwen-demo.json` 是一份可直接跑的公文规格（含标题/主送机关/四层序号/附件/署名/附注），
-`gongwen-demo.docx` 与 `gongwen-demo-portable-1.png`（渲染成图）是它的产物，用来目视核对版式。
-
-## 依赖
-
-| 类别 | 需要什么 |
+| 方向 | 要点 |
 | --- | --- |
-| 系统命令 | `soffice`（libreoffice）、`pdftoppm`/`pdftotext`（poppler-utils）、`tesseract`（含 `chi_sim`） |
-| 中文字库 | `fonts-arphic-gbsn00lp`（宋）、`fonts-cwtex-fs`（仿宋）、`fonts-lxgw-wenkai`（楷）、`fonts-arphic-gkai00mp`（楷，备用）＋ fontconfig 别名；一键 `sudo bash scripts/install_fonts.sh` |
-| Python（`~/.local`，`pip --user --break-system-packages`） | python-docx、openpyxl、python-pptx、xlrd、odfpy、pymupdf、pypdf、pdf2docx、cryptography（PDF AES 加解密用） |
-| 可选 | pandoc（markdown ↔ docx 等） |
+| 读 | docx/xlsx/pptx/pdf/odt/ods 与旧版 doc/xls/ppt 的文本与表格；结构信息（页数、表数、幻灯片数）；按内容判真实格式 |
+| 转 | 走 LibreOffice headless 任意格式互转，每次调用开独立 profile（可放心并发） |
+| 生成 | `docx-new`、`xlsx-new`、`pptx-new` 按 JSON 规格生成；中文公文（`gongwen`）、合同、报告、汇报四种版式 |
+| 改 | 查找替换覆盖正文/表格/文本框/页眉页脚；**先合并 run 再按渲染文本找**，跨 run 也命中 |
+| Excel | 把公式算成真实值；加图表；导出 UTF-8 CSV |
+| PDF | 合并、拆分、取图、旋转、水印、AES-256 加解密、OCR、转可编辑 Word、渲染成 PNG |
+| 表单 | 列表单字段并填 AcroForm；静态 PDF 则先抽结构、自检框位，再按框填字并出红框校验图 |
+| 表单逆向 | 从扫描件/照片学模板 profile（`form-learn`）、按规格渲染干净空白模板（`form-render`）、几何自检（`form-verify`）、切出字迹层（`form-extract` / `form-blank`） |
+| 盘点 | Word 修订与批注清单（`docx-review`，只读） |
 
-`python3 scripts/office_cli.py doctor` 会把上面逐项列出来。
+全部子命令见 [`SKILL.md`](SKILL.md)；格式、过滤器与规格 JSON 见
+[`references/formats.md`](references/formats.md)。
 
-## 当前状态
+## 作为 Agent Skill 使用
 
-- 端到端自检 **31/31 通过**（生成 docx/xlsx/pptx → LO 转 PDF/CSV → 抽文本 → 替换 → 缩略图 →
-  PDF 合并拆分 → 图片型 PDF 的 OCR → PDF 转 Word → 旋转/水印 → AES 加解密 → 表单填值 → Excel 图表 →
-  Word 修订盘点 → 中文公文版式 → 合同/报告版式 → 汇报 PPT 版式 → **表单模板逆向（规格渲染 + 几何自检 + 填写区切字迹）**
-  → **四道交付闸门（跨 run 替换、run 合并、公式重算、OOXML 包体检、静态 PDF 填字）**）。
-- **交付闸门**：`ooxml-check`（包结构）、`form-verify`（几何）、`xlsx-recalc`（公式值）、
-  `pdf-boxcheck` + `pdf-fill --preview`（填字框位）。四道各有真跑用例，原理见
-  [references/quality-gates.md](references/quality-gates.md)。
-- **表单模板逆向**走两条路，互不替代：
-  1. **规格 → 干净空白模板**（`templates/*.json` → `form-render` → docx/PDF）：文字人工校读、排版通用渲染，
-     原件丢了也能重新出一份能打印的空白件；
-  2. **扫描件 → 字迹层 / 扫描件空白**（`form-learn` 出 profile，人工校正 `fill_regions` 后
-     `form-extract` / `form-blank`）：同一张表单登记一次，之后每张同款都能切。
-  规格路带**几何自检** `form-verify`：渲染 → 出 PDF → 读矢量线位 → 与 `spec.verify` 比，超差即 `ok:false`。
-  实测边界：手机拍的淡线表单，OCR 自动学的模板**不够准**（会读错字），profile 必须人工过一遍；
-  手写与印刷在同一行重叠时（如填空数字），单靠扫描件无法完全分开 —— 此时以"规格重排"的模板为准。
-  逆向方法与量测踩坑见 [references/form-reverse.md](references/form-reverse.md)。
-- 中文版式见 [references/cn-doc-formats.md](references/cn-doc-formats.md)：字号磅值对照、公文逐要素字体、
-  页边距/版心、对稿清单、商业文书惯例。`--profile gongwen|contract|report|brief`。中文字体名已由 fontconfig 别名接好，**不需要** `--portable`。
-- 已知边界（都写在 `SKILL.md` 第四节）：金山 `.wps/.et/.dps` 不支持；PDF→Word 保真度有限；
-  本机用文鼎宋/cwTeX 仿宋/霞鹜文楷/Noto Sans 替代微软字体，**字形字宽有差，分页与 Word 不会逐像素一致**；
-  PDF 加解密依赖 `cryptography`；表单只覆盖 AcroForm（XFA 不支持）；Word 修订只盘点、不自动改。
+`SKILL.md` 是技能正文：front matter 里的 `name` / `description` 决定智能体什么时候加载它。
+把整个目录放进你的技能目录并在那里启用 —— 例如 Claude Code 的 `~/.claude/skills/office-docs-skill/`、
+DSH 的 `~/.dsh/skills/office-docs-skill/`。
 
-## 最后验证
+`examples/gongwen-demo.json` 是一份可直接跑的公文规格（标题/主送机关/四层序号/附件/署名/附注）；
+`examples/gongwen-demo.docx`、`gongwen-demo-portable.docx`、`gongwen-demo-portable.pdf` 与
+`gongwen-demo-portable-1.png`／`-2.png` 是它的产物，用来目视核对版式。
 
-2026-09-30（自检 **31/31**；LibreOffice 25.2.3.2 / Python 3.13.5 / Debian 13 / 中文字体别名 9/9）。
+`templates/` 放表单规格（JSON）：一张空白模板 ＋ 配套的扫描 profile，供 `form-render` / `form-verify` 使用。
 
-## 来源与许可
+## 边界
 
-全部代码为本项目原创，只调用公开 API（python-docx / openpyxl / python-pptx / PyMuPDF / pypdf /
-odfpy / pdf2docx / cryptography 与 LibreOffice、poppler、tesseract 的命令行）。
-**未复制、未派生任何第三方技能材料**，因此本项目自身不携带他人许可限制。
+- **微软 Works / 金山 WPS 的私有格式**（`.wps`/`.et`/`.dps`）不支持。LibreOffice 里的 `MS_Works`
+  过滤器是**微软 Works**，与金山 WPS 无关。
+- **PDF → Word 是逆向重建，不是转换**：文字通常还在，但表格常被还原成文本行、多栏会串。
+  重要文档必须人工核对，或让对方给原始 docx。
+- **中文字形是"替身"**（没装微软字体时）：宋体 → AR PL SungtiL GB、仿宋 → cwTeX 仿宋、
+  楷体 → 霞鹜文楷、黑体 → Noto Sans CJK。字形与字宽都有差，**分页不会与 Windows 上的 Word 逐像素一致**。
+  docx 里照写正常字体名（`宋体`、`仿宋_GB2312`）即可，两端都能解析。
+- **旧版二进制格式**（doc/xls/ppt）只能靠 LibreOffice 读；要编程处理先转成 OOXML。
+- **PDF 加密需要 `cryptography`**。表单填写只覆盖 AcroForm 字段；XFA（`/XFA`）不支持。
+- **OCR 自动学的模板必须人工过一遍**：淡线或手机拍的表单，`form-learn` 会读错字。
+  手写与印刷在同一行重叠时，改用"规格重排"的模板，别硬分扫描件。
+- **排版类改动一律用 `form-verify` 量，不靠肉眼。**
 
-> 说明：后来见过一份**声明为 Proprietary 的第三方文档技能包**（宿主共享目录里），只作**思路参考**
-> （例如"每次写入后都要有一道校验"的组织方式、LibreOffice 函数支持范围这类**事实**）。
-> 其代码与文字**一律未复制**：本项目的实现、模块划分、CLI 与文档都是自己的。
-> 判断依据记在记忆区该日笔记的"第三轮"一节。
+## 目录结构
 
-## 过程与结论
+```
+SKILL.md                  # 技能入口：规则、决策表、命令参考
+README.md / README.en.md  # 中文 / 英文说明
+scripts/
+  office_cli.py           # 统一入口（JSON 信封，含 ok 字段）
+  convert.py              # LibreOffice headless 封装 + doctor（并发、超时、产物校验）
+  readers.py              # 抽文本 / 看结构 / 读表，按内容判类型
+  writers.py              # 生成与修改 docx/xlsx/pptx
+  cn_profiles.py          # 中文公文 / 合同 / 报告 / 汇报 PPT 版式
+  pdf_ops.py              # PDF 合并、拆分、取图、渲染、OCR、转 Word
+  extras.py               # PDF 旋转/水印/AES/表单，Excel 图表，Word 修订批注盘点
+  docx_runs.py            # run 合并 + 按渲染文本查找替换
+  xlsx_recalc.py          # LibreOffice 宏重算公式 + 错误扫描
+  pdf_forms.py            # 静态 PDF：抽结构 / 框位自检 / 按框填字 / 出校验图
+  ooxml_check.py          # OOXML 包结构闸门
+  form_template.py        # 表单模板逆向：网格/OCR profile、规格渲染、几何自检
+  install_fonts.sh        # 装中文字库 + Windows 字体名别名（--check 只体检）
+  selftest.py             # 端到端自检，真跑真断言
+assets/                   # fontconfig 别名文件（install_fonts.sh 装它）
+templates/                # 表单规格（JSON）与配套扫描 profile
+references/
+  formats.md              # 格式、过滤器名、字体替换、规格 JSON 全表
+  quality-gates.md        # 四道交付闸门：原理、坑、spec 格式
+  cn-doc-formats.md       # 中文公文/商业文书排版速查
+  form-reverse.md         # 表单逆向：profile 字段、填写区、字号反推
+examples/                 # 公文 demo 规格与渲染产物
+```
 
-过程、踩坑与验证边界记录在记忆区（工作区外，绝对路径）：
-`/home/ypipaq/Work/memory/2026-09-30/本机文档处理能力与官方技能许可证.md`。
+## 许可
+
+MIT

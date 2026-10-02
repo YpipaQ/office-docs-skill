@@ -148,4 +148,4 @@ references/cn-doc-formats.md 中文公文/商业文书排版速查（字号磅�
 references/form-reverse.md   表单逆向：profile 字段、fill_regions 怎么标、字号怎么反推
 ```
 
-改完代码先跑 `python3 scripts/selftest.py`（退出码 0 = 31/31 通过），再交付。
+改完代码先跑 `python3 scripts/selftest.py`（退出码 0 = 全部通过），再交付。
