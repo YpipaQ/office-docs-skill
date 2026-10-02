@@ -1,0 +1,65 @@
+{
+ "name": "住所（经营场所）证明",
+ "note": "标准表单空白模板规格。几何来自 2026-09-30 对真实照片的线位实测（见 memory/2026-09-30 与 templates/*.scan-profile.json）。原始照片左/下/右三边被裁，绝对尺度有约 ±10% 不确定，因此字号按「每行容纳字数」反推、行列尺寸取实测比例。verify 段是出图自检目标：横线在 3.60/5.20/13.80/15.10/19.50/24.90 cm，竖线在 1.90/5.50/20.20 cm。",
+ "page": {"size": "A4", "margins_cm": {"top": 2.0, "bottom": 1.0, "left": 1.9, "right": 0.8}},
+ "verify": {
+  "pages": 1,
+  "tol_cm": 0.12,
+  "h_cm": [3.60, 5.20, 13.80, 15.10, 19.50, 24.90],
+  "v_cm": [1.90, 5.50, 20.20]
+ },
+ "title": {
+  "text": "住所（经营场所）证明", "font": "宋体", "size": 22, "bold": true, "align": "center",
+  "line_pt": 30, "space_before_pt": 0, "space_after_pt": 15.35
+ },
+ "body": [
+  {"table": {"widths_cm": [3.6, 14.7], "rows": [
+    {"height_cm": 1.6, "height_rule": "exact", "cells": [
+      {"valign": "center", "paras": [
+        {"text": "住所（经营场所）", "align": "center", "font": "宋体", "size": 10.5},
+        {"text": "（详细地址）", "align": "center", "font": "宋体", "size": 10.5}
+      ]},
+      {"paras": [{"text": "", "font": "宋体", "size": 14}]}
+    ]},
+    {"height_cm": 8.6, "height_rule": "atLeast", "cells": [
+      {"valign": "center", "padding_cm": 0.15, "paras": [
+        {"text": "住　所", "align": "center", "font": "宋体", "size": 12, "space_after_pt": 6},
+        {"text": "（经营场所）", "align": "center", "font": "宋体", "size": 12, "space_after_pt": 16},
+        {"text": "产　权", "align": "center", "font": "宋体", "size": 12, "space_after_pt": 6},
+        {"text": "证　明", "align": "center", "font": "宋体", "size": 12}
+      ]},
+      {"padding_cm": 0.3, "paras": [
+        {"text": "本房屋产权归＿＿＿＿＿＿＿＿＿＿＿＿所有，尚未办理相关规定的产权证，面积＿＿＿＿平方米。该场所不属违法违章建筑，具备开展生产经营活动的条件，同意作为住所（经营场所）使用。如该场所涉及政府依法征用或拆迁，将依法办理住所（经营场所）的变更或注销登记。", "font": "宋体", "size": 14, "first_line_cm": 0.99, "line_pt": 20},
+        {"text": "", "font": "宋体", "size": 14, "line_pt": 20},
+        {"text": "", "font": "宋体", "size": 14, "line_pt": 20},
+        {"text": "产权人签字（盖章）：", "align": "right", "font": "宋体", "size": 14, "space_before_pt": 10, "space_after_pt": 26},
+        {"text": "　　　　年　　月　　日", "align": "right", "font": "宋体", "size": 14}
+      ]}
+    ]},
+    {"height_cm": 1.3, "height_rule": "exact", "cells": [
+      {"valign": "center", "paras": [
+        {"text": "情况属实，同意上报进行市场经营主体登记。", "font": "宋体", "size": 14, "first_line_cm": 0.99}
+      ], "merge_right": 1}
+    ]},
+    {"height_cm": 4.4, "height_rule": "atLeast", "cells": [
+      {"valign": "center", "padding_cm": 0.15, "paras": [
+        {"text": "有关部门", "align": "center", "font": "宋体", "size": 12, "space_after_pt": 6},
+        {"text": "证　明", "align": "center", "font": "宋体", "size": 12}
+      ]},
+      {"padding_cm": 0.3, "paras": [
+        {"text": "证明单位（公章）", "align": "center", "font": "宋体", "size": 14, "space_before_pt": 18, "space_after_pt": 40},
+        {"text": "　　　　年　　月　　日", "align": "center", "font": "宋体", "size": 14}
+      ]}
+    ]},
+    {"height_cm": 5.4, "height_rule": "atLeast", "cells": [
+      {"padding_cm": 0.2, "paras": [
+        {"text": "须　知", "align": "center", "font": "宋体", "size": 16, "bold": true, "space_after_pt": 8},
+        {"text": "1、住所（经营场所）产权人属于非自然人的，加盖公章；产权人属自然人的，由自然人签字。", "font": "宋体", "size": 10.5, "first_line_cm": 0.74, "space_after_pt": 3, "line_pt": 15},
+        {"text": "2、本证明由住所（经营场所）所在地乡、镇人民政府（街道办事处、各类经济功能区管委会）、村（社区）委员会或产权人主管部门出具。", "font": "宋体", "size": 10.5, "first_line_cm": 0.74, "space_after_pt": 3, "line_pt": 15},
+        {"text": "3、本证明适用于申报市场经营主体登记时无法提交规定的产权证明的情形，不作为房屋拆迁补偿依据。", "font": "宋体", "size": 10.5, "first_line_cm": 0.74, "space_after_pt": 3, "line_pt": 15},
+        {"text": "4、表格填写或者签字应当使用黑色钢笔或者黑色水笔，切勿使用圆珠笔或铅笔。不得擅自涂改。", "font": "宋体", "size": 10.5, "first_line_cm": 0.74, "line_pt": 15}
+      ], "merge_right": 1}
+    ]}
+  ]}}
+ ]
+}
