@@ -1,14 +1,16 @@
 ---
 name: office-docs-skill
-description: 当用户要读、写、改、转、生成 Word（docx/dotx/doc）、Excel（xlsx/xlsm/xls/csv/ods）、PowerPoint（pptx/ppt/odp）、PDF 文档时使用。触发包括：从文档里抽文字或表格、按模板生成报告/演示文稿/表格、Word 查找替换、Excel 公式算值、PDF 合并拆分/转图片/OCR/转可编辑 Word、给文档出缩略图核对排版、判断文档真实格式。本机无 WPS、无 MS Office，全部靠 LibreOffice headless ＋ python-docx/openpyxl/python-pptx/PyMuPDF/pdf2docx/poppler/tesseract 实现。金山私有格式 .wps/.et/.dps 不在支持范围。
+description: Read, write, convert and generate Word/Excel/PowerPoint/PDF documents via LibreOffice headless and Python libraries (docx, xlsx, pptx, pdf, odt). Use when extracting text or tables, fill a template, find-and-replace, recalculate formulas, merge/split/OCR a PDF, render pages to check layout, or detect format. 中文触发：「抽文字/表格」「按模板生成报告」「Word 查找替换」「Excel 公式算值」「PDF 合并/拆分/转图片/OCR」「转成可编辑 Word」「出缩略图核对排版」「判断真实格式」。EN: "convert docx to pdf" "extract tables from xlsx".
 ---
 
-# office-docs-skill —— 本机文档读写与转换
+# office-docs-skill — office document read/write/convert
+
+**One line**: this machine has neither WPS nor MS Office, yet Word / Excel / PPT / PDF can still be read out, edited, converted, generated from scratch, and rendered to images for layout checks.
 
 **一句话**：这台机器没装 WPS、也没装微软 Office，但 Word / Excel / PPT / PDF 照样能读出来、改掉、
 转格式、从零生成、渲染成图核对。
 
-## 一、先跑 doctor（任何文档活之前）
+## 1. Run doctor first
 
 ```bash
 python3 scripts/office_cli.py doctor      # {"ok": true, ...} 才算环境齐
@@ -33,7 +35,7 @@ sudo bash scripts/install_fonts.sh      # 装 4 套字库 + 别名 + fc-cache（
 楷体/KaiTi → 霞鹜文楷 · 黑体/SimHei/微软雅黑/等线 → Noto Sans CJK。
 **docx 里照写「宋体」「仿宋_GB2312」即可**，本机与 Windows 两端都对，不需要换字体名。
 
-## 二、决策表：要做什么 → 走哪条路
+## 2. Decision table
 
 | 任务 | 用什么 | 备注 |
 | --- | --- | --- |
@@ -78,7 +80,7 @@ sudo bash scripts/install_fonts.sh      # 装 4 套字库 + 别名 + fc-cache（
 ]}
 ```
 
-## 三、四条铁律（都是踩出来的）
+## 3. Four hard rules
 
 1. **soffice 不能共用 profile 并发**：同一个 `UserInstallation` 起两个进程会互相踢。本工具每次调用开
    独立临时 profile（`convert.py` 内建），所以可以放心并发调用；自己手写 `soffice` 命令时必须带
@@ -92,7 +94,7 @@ sudo bash scripts/install_fonts.sh      # 装 4 套字库 + 别名 + fc-cache（
    得用**固定行距 `line_pt`**，靠默认行距会被字体度量顶开 0.5cm 以上。
    **结论：排版类改动一律 `form-verify` 量一遍，别用肉眼当判据。**
 
-## 四、交付前的四道闸门（"改完就算完"是错的）
+## 4. Four gates before delivery
 
 | 闸门 | 命令 | 挡住什么 |
 | --- | --- | --- |
@@ -103,7 +105,7 @@ sudo bash scripts/install_fonts.sh      # 装 4 套字库 + 别名 + fc-cache（
 
 共同点：**别用"文件存在"当成功**。原理、坑与 spec 格式全表 → [`references/quality-gates.md`](references/quality-gates.md)。
 
-## 五、能力与边界（诚实版，别过度承诺）
+## 5. Capabilities and limits
 
 - **金山私有的 `.wps/.et/.dps` 打不开**。LibreOffice 注册表里的 `MS_Works`（`UserData=WPS`）是
   **微软 Works** 的 .wps，与金山 WPS 无关，别当支持。
@@ -120,7 +122,7 @@ sudo bash scripts/install_fonts.sh      # 装 4 套字库 + 别名 + fc-cache（
   `revisions` 条数 —— **替换只改可见文字，不动修订结构**。`ooxml-check` 判"能不能打开"，不判排版对不对；
   `pdf-fill` 写的是文字层，不是真实表单域（要真表单域只能对本来就是 AcroForm 的文件用 `pdf-forms`）。
 
-## 六、目录
+## 6. Layout
 
 ```
 scripts/
