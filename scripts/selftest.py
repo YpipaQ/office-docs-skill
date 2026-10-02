@@ -291,14 +291,31 @@ def main() -> int:
     check("form-verify（列宽钉死 + 线位自检）", form_verify_geometry)
 
     def font_aliases():
-        """中文别名必须落到衬线宋体/cwTeX 仿宋，而不是一律兜到 Noto Sans。"""
+        """字体名必须落到**对的一类字**：中文（宋体→衬线、仿宋→仿宋、黑体→无衬线）要支持中文；
+        英文（Arial→无衬线、Times New Roman→衬线、Courier New→等宽）落在对类别即可，字形不必等同。"""
         d = lo.doctor()
         bad = d.get("font_aliases_bad") or []
-        assert not bad, f"这些字体名没落到预期字库：{bad} -> " + \
+        assert not bad, f"这些字体名没落到预期的一类字：{bad} -> " + \
                         json.dumps({k: v['match'] for k, v in d['font_aliases'].items() if k in bad}, ensure_ascii=False)
+        zh = [k for k, v in d["font_aliases"].items() if v["script"] == "zh"]
+        latin = [k for k, v in d["font_aliases"].items() if v["script"] == "latin"]
+        assert zh and latin, f"期望表应同时含中英字体名：zh={zh} latin={latin}"
+        assert all(v["cjk_ok"] for k, v in d["font_aliases"].items() if k in zh), "有中文字名落到了不支持中文的字体"
+        # 回归钉子：_FONT_EXPECT 里每个字名都必须能在别名文件里找到对应 <family>，
+        # 否则"加了期望却没加别名"，这个字名会被静默漏检（反向的多样性变体不在此列）。
+        conf = Path(__file__).resolve().parent.parent / "assets" / "99-cjk-windows-alias.conf"
+        if conf.exists():
+            import re
+            declared = set()
+            for block in re.findall(r"<alias\b.*?</alias>", conf.read_text(encoding="utf-8"), re.S):
+                fams = re.findall(r"<family>([^<]+)</family>", block)
+                if fams:
+                    declared.add(fams[0].strip())
+            missing = sorted(k for k in lo._FONT_EXPECT if k not in declared)
+            assert not missing, f"_FONT_EXPECT 里有、别名文件里没有的字名：{missing}"
         assert d["cjk_fonts"] >= 20, d["cjk_fonts"]
-        return f"9 个中文字体名别名全部就位 · 中文字库 {d['cjk_fonts']} 套"
-    check("中文字体别名（宋体→衬线，别兜到 Noto Sans）", font_aliases)
+        return f"中文字名 {len(zh)} 个 + 英文字名 {len(latin)} 个全部就位 · 中文字库 {d['cjk_fonts']} 套"
+    check("字体别名（中文字形+英文字族都落到对的类别）", font_aliases)
 
     def form_split_synthetic():
         import cv2

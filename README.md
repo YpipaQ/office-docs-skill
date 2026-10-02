@@ -15,6 +15,7 @@
 | Python 包 | `python-docx`、`openpyxl`、`python-pptx`、`xlrd`、`odfpy`、`pymupdf`、`pypdf`、`pdf2docx`、`cryptography`（仅 PDF AES 加解密） |
 | 可选 | `pandoc`（Markdown ↔ docx 等） |
 | 中文排版（可选） | CJK 字库 ＋ fontconfig 别名；`scripts/install_fonts.sh` 负责安装与体检 |
+| 常用英文字体（可选） | 同一份别名文件把 Arial / Helvetica / Times New Roman / Georgia / Calibri / Cambria / Verdana / Tahoma / Courier New 接到本机的度量兼容字族 |
 
 先跑 `python3 scripts/office_cli.py doctor` —— 它会把上面每一项列成 `ok` 或缺什么。
 除此之外没有别的前提：不需要安装步骤、没有常驻服务、没有配置文件。
@@ -87,8 +88,10 @@ DSH 的 `~/.dsh/skills/office-docs-skill/`。
 - **PDF → Word 是逆向重建，不是转换**：文字通常还在，但表格常被还原成文本行、多栏会串。
   重要文档必须人工核对，或让对方给原始 docx。
 - **中文字形是"替身"**（没装微软字体时）：宋体 → AR PL SungtiL GB、仿宋 → cwTeX 仿宋、
-  楷体 → 霞鹜文楷、黑体 → Noto Sans CJK。字形与字宽都有差，**分页不会与 Windows 上的 Word 逐像素一致**。
-  docx 里照写正常字体名（`宋体`、`仿宋_GB2312`）即可，两端都能解析。
+  楷体 → 霞鹜文楷、黑体 → Noto Sans CJK。**只要求落到对的一类字**（宋体落衬线宋、黑体落无衬线黑体），
+  字形与字宽与原字体有差，**分页不会与 Windows 上的 Word 逐像素一致**。
+  docx 里照写正常字体名（`宋体`、`仿宋_GB2312`、`Arial`、`Times New Roman`）即可，两端都能解析。
+  体检口径见 `doctor` 的 `font_aliases`：每个字体名给出落到的字族、是否对了类别、中文名还验是否支持中文。
 - **旧版二进制格式**（doc/xls/ppt）只能靠 LibreOffice 读；要编程处理先转成 OOXML。
 - **PDF 加密需要 `cryptography`**。表单填写只覆盖 AcroForm 字段；XFA（`/XFA`）不支持。
 - **OCR 自动学的模板必须人工过一遍**：淡线或手机拍的表单，`form-learn` 会读错字。
@@ -128,3 +131,8 @@ examples/                 # 公文 demo 规格与渲染产物
 ## 许可
 
 MIT
+
+---
+
+> **说明**：本项目由智能体在日常使用中逐步积累而成 —— 命令、坑与判据都来自实际跑过的任务，
+> 而非先写文档再实现。

@@ -165,32 +165,87 @@ def doctor() -> dict:
     }
 
 
-# Windows/常见中文字体名 → 本机应落到的字库（判据取 fc-match 输出里的子串）
-_FONT_EXPECT = {
-    "宋体": "文鼎", "SimSun": "文鼎",
-    "仿宋": "cwTeX", "FangSong": "cwTeX",
-    "楷体": "霞鹜文楷", "KaiTi": "霞鹜文楷",
-    "黑体": "Noto Sans CJK", "SimHei": "Noto Sans CJK",
-    "微软雅黑": "Noto Sans CJK",
+# Windows/常见字体名 → 本机应落到的**字族关键字**。
+#
+# 判据是"落到了对的一类字"，不是"落到了某一个特定字库"：宋体只要落在衬线宋、仿宋落在仿宋、
+# 黑体落在无衬线黑体就算过；英文字体同理（Arial→无衬线、Times New Roman→衬线、
+# Courier New→等宽），**字形不必与微软原字体等同**（用户口径 2026-10-02）。
+# 关键字匹配 fc-match 的**完整 family 字段**（英文名与中文名都认），不匹配文件名。
+# 键与 assets/99-cjk-windows-alias.conf 里的 <family> 一一对应；
+# selftest 有一条回归检查，防止"加了别名却忘了加期望"。
+_FONT_EXPECT: dict[str, tuple[str, ...]] = {
+    # 中文字体名：还必须支持中文（见 _font_aliases 的 cjk_ok）
+    "宋体": ("AR PL SungtiL", "AR PL UMing", "Noto Serif CJK"),
+    "SimSun": ("AR PL SungtiL", "AR PL UMing", "Noto Serif CJK"),
+    "仿宋": ("cwTeX", "FangSong", "仿宋"),
+    "FangSong": ("cwTeX", "FangSong", "仿宋"),
+    "楷体": ("Kai", "楷"),
+    "KaiTi": ("Kai", "楷"),
+    "黑体": ("Noto Sans CJK", "WenQuanYi", "文泉驿", "Hei", "黑"),
+    "SimHei": ("Noto Sans CJK", "WenQuanYi", "文泉驿", "Hei", "黑"),
+    "微软雅黑": ("Noto Sans CJK", "WenQuanYi", "文泉驿", "Hei", "黑"),
+    "方正小标宋简体": ("AR PL SungtiL", "AR PL UMing", "Noto Serif CJK"),
+    # 英文常用族：只要求落在对的类别（衬线/无衬线/等宽），不要求支持中文
+    "Arial": ("Liberation Sans", "Nimbus Sans", "Helvetica", "DejaVu Sans", "FreeSans"),
+    "Helvetica": ("Liberation Sans", "Nimbus Sans", "DejaVu Sans", "FreeSans"),
+    "Times New Roman": ("Liberation Serif", "Nimbus Roman", "DejaVu Serif", "FreeSerif", "Noto Serif"),
+    "Georgia": ("Noto Serif", "DejaVu Serif", "Liberation Serif", "FreeSerif"),
+    "Calibri": ("Carlito",),
+    "Cambria": ("Caladea",),
+    "Verdana": ("DejaVu Sans", "Noto Sans", "Liberation Sans", "FreeSans"),
+    "Tahoma": ("DejaVu Sans", "Noto Sans", "Liberation Sans", "FreeSans"),
+    "Courier New": ("Liberation Mono", "Nimbus Mono", "DejaVu Sans Mono", "FreeMono"),
 }
+
+# 这些是中文字体名（要求支持中文）；表里其余按英文族处理
+_FONT_ZH = frozenset({
+    "宋体", "SimSun", "仿宋", "FangSong", "楷体", "KaiTi",
+    "黑体", "SimHei", "微软雅黑", "方正小标宋简体",
+})
 
 
 def _font_aliases() -> dict:
-    """查「文档里写宋体时，本机实际用哪套字」。
+    """查「文档里写某字体名时，本机实际用哪套字」，并判断是否落到了对的一类字。
 
-    踩过的坑：不装 fontconfig 别名时 fc-match 宋体 会落到 **Noto Sans CJK（无衬线）** ——
-    宋体渲染成黑体。而 docx 里存的仍是「宋体」，所以在 Windows 上打开是对的、
-    本机出 PDF 是错的，光看文件名根本发现不了。装别名见 scripts/install_fonts.sh。
+    判据（同时成立才算 ok）：
+      1. fc-match 能返回字体；
+      2. 落到的 family 里含该字体名对应的**字族关键字**（见 `_FONT_EXPECT`）；
+      3. **只有中文名字**还要额外验证该字体支持中文（fontconfig lang 含 `zh`，或 family 含 CJK 字样）。
+         英文字体名不强求中文字形 —— 中英混排时 LibreOffice 会自己走 CJK 回退链。
+
+    踩过的坑（判据本身）：早先拿中文期望串（`文鼎`/`霞鹜文楷`）去比 `fc-match` 的**输出行**，
+    而输出里是**英文** family 名（`AR PL SungtiL GB`/`LXGW WenKai`）—— 于是别名配得完全正确的
+    机器也判 `bad`，`selftest` 恒 FAIL 一项。改成比 family 字段后，判据与实际配置对得上。
+    另一类真实坏法仍会被抓到：不装别名时 `fc-match 宋体` 落到 Noto Sans CJK（无衬线），
+    family 里没有宋体关键字 → 判 bad。
     """
     import subprocess as _sp
     out = {}
-    for name, expect in _FONT_EXPECT.items():
+    for name, want in _FONT_EXPECT.items():
+        families: list[str] = []
+        langs = ""
         try:
-            r = _sp.run(["fc-match", name], capture_output=True, text=True, timeout=10)
-            got = (r.stdout or "").strip()
+            r = _sp.run(["fc-match", "-f", "%{family}|%{lang}", name],
+                        capture_output=True, text=True, timeout=10)
+            fam_raw, _, langs = (r.stdout or "").partition("|")
+            families = [f.strip() for f in fam_raw.split(",") if f.strip()]
         except Exception:
-            got = ""
-        out[name] = {"match": got, "expect": expect, "ok": expect in got}
+            pass
+        # `%{family}` 会给整个字族链（首选在前）。任一条命中关键字即算这一类字。
+        blob = " ".join(families)
+        alias_ok = any(w in blob for w in want)
+        zh_ok = "zh" in {t.split("-")[0] for t in langs.split("|") if t} or "CJK" in blob
+        is_zh = name in _FONT_ZH
+        first = families[0] if families else ""
+        out[name] = {
+            "match": first,
+            "families": families,
+            "expect": " / ".join(want),
+            "alias_ok": alias_ok,
+            "cjk_ok": zh_ok,
+            "script": "zh" if is_zh else "latin",
+            "ok": bool(families) and alias_ok and (zh_ok if is_zh else True),
+        }
     return out
 
 

@@ -16,6 +16,7 @@ without Microsoft Office (and without WPS).
 | Python packages | `python-docx`, `openpyxl`, `python-pptx`, `xlrd`, `odfpy`, `pymupdf`, `pypdf`, `pdf2docx`, `cryptography` (PDF AES only) |
 | Optional | `pandoc` (Markdown ↔ docx and friends) |
 | Chinese layout (optional) | CJK fonts plus fontconfig aliases; `scripts/install_fonts.sh` installs and checks them |
+| Common Latin fonts (optional) | The same alias file maps Arial / Helvetica / Times New Roman / Georgia / Calibri / Cambria / Verdana / Tahoma / Courier New onto metric-compatible local families |
 
 Run `python3 scripts/office_cli.py doctor` first — it lists every item above as `ok` or missing.
 Nothing else is assumed: there is no install step, no service and no configuration file.
@@ -91,10 +92,12 @@ visual layout comparison.
 - **PDF → Word is reconstruction, not conversion.** Text usually survives; tables are often flattened
   into text lines and multi-column layouts can interleave. Check important documents by hand, or ask
   for the original docx.
-- **CJK rendering uses substitute fonts** unless the Microsoft fonts are installed: SimSun → AR PL
-  SungtiL GB, FangSong → cwTeX FangSong, KaiTi → LXGW WenKai, SimHei → Noto Sans CJK. Glyphs and
-  metrics differ, so pagination is not pixel-identical to Word on Windows. Write the normal font
-  names (`宋体`, `仿宋_GB2312`) in the docx — both ends resolve them.
+- **CJK glyphs use substitutes** unless the Microsoft fonts are installed: SimSun → AR PL SungtiL GB,
+  FangSong → cwTeX FangSong, KaiTi → LXGW WenKai, SimHei → Noto Sans CJK. The requirement is only
+  that each name lands in the **right class** (SimSun → a serif Song, SimHei → a sans black); glyphs
+  and metrics differ, so pagination is not pixel-identical to Word on Windows. Write the normal font
+  names (`宋体`, `仿宋_GB2312`, `Arial`, `Times New Roman`) in the document — both ends resolve them.
+  See `font_aliases` in `doctor` output for the per-name verdict.
 - **Legacy binary formats** (doc/xls/ppt) are readable only through LibreOffice; convert to OOXML
   before processing them programmatically.
 - **PDF encryption needs `cryptography`.** Form filling covers AcroForm fields only; XFA (`/XFA`)
@@ -137,3 +140,8 @@ examples/                 # Chinese official-document demo spec and rendered out
 ## License
 
 MIT
+
+---
+
+> **Note**: this project was accumulated by an agent through day-to-day use — the commands, the
+> pitfalls and the checks all come from tasks actually run, not from a spec written up front.
