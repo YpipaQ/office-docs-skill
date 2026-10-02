@@ -4,7 +4,7 @@
 or as a plain CLI.** It wraps LibreOffice headless plus Python libraries, so it works on machines
 without Microsoft Office (and without WPS).
 
-[中文](README.md) ｜ MIT
+[中文](README.md) ｜ Version 2.0.0 ｜ MIT
 
 ---
 
