@@ -117,7 +117,7 @@ def ocr(path: str | Path, *, lang: str = "chi_sim+eng", dpi: int = 200,
 
     tess = _need("tesseract")
     src = Path(path).expanduser().resolve()
-    tmp = Path(tempfile.mkdtemp(prefix="office-docs-ocr-"))
+    tmp = Path(tempfile.mkdtemp(prefix="office-docs-skill-ocr-"))
     try:
         imgs = to_images(src, tmp, dpi=dpi, pages=pages)
         out: list[str] = []

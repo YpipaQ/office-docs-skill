@@ -41,7 +41,7 @@ def check(name: str, fn):
 
 
 def main() -> int:
-    work = Path(tempfile.mkdtemp(prefix="office-docs-selftest-"))
+    work = Path(tempfile.mkdtemp(prefix="office-docs-skill-selftest-"))
 
     # 1) 环境
     def env_ok():
@@ -103,7 +103,7 @@ def main() -> int:
     pptx = work / "c.pptx"
 
     def pptx_build():
-        writers.new_pptx({"title": "演示标题 Test", "subtitle": "office-docs",
+        writers.new_pptx({"title": "演示标题 Test", "subtitle": "office-docs-skill",
                           "slides": [{"title": "第一页", "bullets": ["要点 A", "要点 B"],
                                       "notes": "备注：讲慢点"},
                                      {"title": "数据页", "table": {"rows": [["季度", "营收"], ["Q3", "1234"]]}}]},

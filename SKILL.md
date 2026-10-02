@@ -1,9 +1,9 @@
 ---
-name: office-docs
+name: office-docs-skill
 description: 当用户要读、写、改、转、生成 Word（docx/dotx/doc）、Excel（xlsx/xlsm/xls/csv/ods）、PowerPoint（pptx/ppt/odp）、PDF 文档时使用。触发包括：从文档里抽文字或表格、按模板生成报告/演示文稿/表格、Word 查找替换、Excel 公式算值、PDF 合并拆分/转图片/OCR/转可编辑 Word、给文档出缩略图核对排版、判断文档真实格式。本机无 WPS、无 MS Office，全部靠 LibreOffice headless ＋ python-docx/openpyxl/python-pptx/PyMuPDF/pdf2docx/poppler/tesseract 实现。金山私有格式 .wps/.et/.dps 不在支持范围。
 ---
 
-# office-docs —— 本机文档读写与转换
+# office-docs-skill —— 本机文档读写与转换
 
 **一句话**：这台机器没装 WPS、也没装微软 Office，但 Word / Excel / PPT / PDF 照样能读出来、改掉、
 转格式、从零生成、渲染成图核对。

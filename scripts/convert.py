@@ -58,7 +58,7 @@ def _profile_dir() -> Path:
         p = Path(fixed).expanduser()
         p.mkdir(parents=True, exist_ok=True)
         return p
-    return Path(tempfile.gettempdir()) / f"office-docs-lo-{os.getpid()}-{uuid.uuid4().hex[:6]}"
+    return Path(tempfile.gettempdir()) / f"office-docs-skill-lo-{os.getpid()}-{uuid.uuid4().hex[:6]}"
 
 
 def convert(

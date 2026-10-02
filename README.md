@@ -1,4 +1,4 @@
-# office-docs
+# office-docs-skill
 
 **本机的文档读写/转换技能**（DSH Agent Skill + 可直接当 CLI 用）。这台机器没有 WPS、也没有微软 Office，
 本项目用 LibreOffice headless ＋ Python 库把 Word / Excel / PPT / PDF 的读、写、改、转、生成、渲染包起来。
@@ -35,7 +35,7 @@ python3 scripts/office_cli.py pdf-fill a.pdf spec.json -o out.pdf --preview p.pn
 ## 作为技能使用
 
 `SKILL.md` 是技能正文（YAML front matter 的 `name` / `description` 决定何时被触发）。
-本机已把本项目软链到 `~/.dsh/skills/office-docs`，在「会话技能」里勾选即可加载。
+本机已把本项目软链到 `~/.dsh/skills/office-docs-skill`，在「会话技能」里勾选即可加载。
 
 `examples/gongwen-demo.json` 是一份可直接跑的公文规格（含标题/主送机关/四层序号/附件/署名/附注），
 `gongwen-demo.docx` 与 `gongwen-demo-portable-1.png`（渲染成图）是它的产物，用来目视核对版式。

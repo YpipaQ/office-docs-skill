@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""office-docs 统一入口。
+"""office-docs-skill 统一入口。
 
 成功判据（沿用本工作区口径）：**退出码 0 且 stdout 是 `{"ok": true, ...}`**。
 所有子命令都支持 `--json` 输出（其实默认就是 JSON），便于脚本/智能体直接解析。
