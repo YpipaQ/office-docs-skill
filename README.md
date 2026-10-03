@@ -3,7 +3,7 @@
 **Word / Excel / PowerPoint / PDF 的读、写、改、转、生成 —— 既能当 Agent Skill，也能直接当 CLI 用。**
 它把 LibreOffice headless 与 Python 库包在一起，因此在**没装 Microsoft Office（也没装 WPS）的机器上**照样能干活。
 
-[English](README.en.md) ｜ 版本 2.0.0 ｜ MIT
+[English](README.en.md) ｜ 版本 2.0.1 ｜ MIT
 
 ---
 
